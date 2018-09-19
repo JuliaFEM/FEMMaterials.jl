@@ -2,7 +2,6 @@ module FEMMaterials
 
 using Materials, FEMBase, LinearAlgebra, Tensors
 
-@info "Using Materials from $(pathof(Materials))!"
 # Material simulator to solve global system and run standard one element tests
 include("mecamatso.jl")
 export get_one_element_material_analysis, AxialStrainLoading, ShearStrainLoading, update_bc_elements!
@@ -36,12 +35,26 @@ function material_preprocess_iteration!(material::Material{M}, element, ip, time
     return nothing
 end
 
-material_preprocess_analysis!(material::Material{<:AbstractMaterial}, element::Element{Poi1}, ip, time) = nothing
-material_postprocess_analysis!(material::Material{<:AbstractMaterial}, element::Element{Poi1}, ip, time) = nothing
-material_preprocess_increment!(material::Material{<:AbstractMaterial}, element::Element{Poi1}, ip, time) = nothing
-material_postprocess_increment!(material::Material{<:AbstractMaterial}, element::Element{Poi1}, ip, time) = nothing
-material_preprocess_iteration!(material::Material{<:AbstractMaterial}, element::Element{Poi1}, ip, time) = nothing
-material_postprocess_iteration!(material::Material{<:AbstractMaterial}, element::Element{Poi1}, ip, time) = nothing
+material_preprocess_analysis!(material::Material{IdealPlastic}, element::Element{Poi1}, ip, time) = nothing
+material_postprocess_analysis!(material::Material{IdealPlastic}, element::Element{Poi1}, ip, time) = nothing
+material_preprocess_increment!(material::Material{IdealPlastic}, element::Element{Poi1}, ip, time) = nothing
+material_postprocess_increment!(material::Material{IdealPlastic}, element::Element{Poi1}, ip, time) = nothing
+material_preprocess_iteration!(material::Material{IdealPlastic}, element::Element{Poi1}, ip, time) = nothing
+material_postprocess_iteration!(material::Material{IdealPlastic}, element::Element{Poi1}, ip, time) = nothing
+
+material_preprocess_analysis!(material::Material{Chaboche}, element::Element{Poi1}, ip, time) = nothing
+material_postprocess_analysis!(material::Material{Chaboche}, element::Element{Poi1}, ip, time) = nothing
+material_preprocess_increment!(material::Material{Chaboche}, element::Element{Poi1}, ip, time) = nothing
+material_postprocess_increment!(material::Material{Chaboche}, element::Element{Poi1}, ip, time) = nothing
+material_preprocess_iteration!(material::Material{Chaboche}, element::Element{Poi1}, ip, time) = nothing
+material_postprocess_iteration!(material::Material{Chaboche}, element::Element{Poi1}, ip, time) = nothing
+
+material_preprocess_analysis!(material::Material{ViscoPlastic}, element::Element{Poi1}, ip, time) = nothing
+material_postprocess_analysis!(material::Material{ViscoPlastic}, element::Element{Poi1}, ip, time) = nothing
+material_preprocess_increment!(material::Material{ViscoPlastic}, element::Element{Poi1}, ip, time) = nothing
+material_postprocess_increment!(material::Material{ViscoPlastic}, element::Element{Poi1}, ip, time) = nothing
+material_preprocess_iteration!(material::Material{ViscoPlastic}, element::Element{Poi1}, ip, time) = nothing
+material_postprocess_iteration!(material::Material{ViscoPlastic}, element::Element{Poi1}, ip, time) = nothing
 
 ### Chaboche ###
 
@@ -139,7 +152,7 @@ end
 ##################
 # Viscoplastic JuliaFEM hooks #
 ##################
-#=
+
 function material_preprocess_increment!(material::Material{ViscoPlastic}, element, ip, time)
     material.dtime = time - material.time
 
@@ -184,7 +197,7 @@ function material_postprocess_increment!(material::Material{ViscoPlastic}, eleme
     update!(ip, "strain", time => copy(material.strain))
     return nothing
 end
-=#
+
 export material_preprocess_analysis!, material_preprocess_increment!,
        material_preprocess_iteration!, material_postprocess_analysis!,
        material_postprocess_increment!, material_postprocess_iteration!

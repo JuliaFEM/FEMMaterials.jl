@@ -3,3 +3,4 @@ FEMBase
 Materials
 Tensors
 NLsolve
+SparseArrays

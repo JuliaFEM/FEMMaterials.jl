@@ -4,11 +4,10 @@
 using FEMBase, Materials, FEMMaterials, Test
 
 @testset "Test FEMMaterials.jl" begin
-    #=@testset "test simulator" begin
+    @testset "test simulator" begin
         include("test_simulator.jl")
     end
     @testset "test mechanical material solver" begin
         include("test_mecamatso.jl")
     end
-    =#
 end

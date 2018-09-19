@@ -1,0 +1,12 @@
+authors = ["ahojukka5 <ahojukka5@gmail.com>", "jvaara <joona_vaara@hotmail.com>"]
+name = "FEMMaterials"
+uuid = "0c6c1f6c-65b6-54d6-9cff-6b64003af638"
+version = "0.0.0"
+
+[deps]
+Materials = "35fa313e-aa48-52ea-bc82-ddb91c7db87b"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+FEMBase = "fbcbbc08-f1bf-5204-9233-b69f5d396135"
+Tensors = "48a634ad-e948-5137-8d70-aa71f2a747f4"

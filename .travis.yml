@@ -7,5 +7,11 @@ julia:
     - 1.0
     - nightly
 
+script:
+    - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/JuliaFEM/Materials.jl"));
+                           Pkg.add(PackageSpec(path=pwd()));
+                           Pkg.build("FEMMaterials");
+                           Pkg.test("FEMMaterials"; coverage=true)'
+
 after_success:
     - julia -e 'cd(Pkg.dir("FEMMaterials")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'

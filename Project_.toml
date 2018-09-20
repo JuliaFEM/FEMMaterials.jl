@@ -1,4 +1,4 @@
-authors = ["ahojukka5 <ahojukka5@gmail.com>", "jvaara <joona_vaara@hotmail.com>"]
+authors = ["Jukka Aho <ahojukka5@gmail.com>", "Joona Vaara <joona_vaara@hotmail.com>"]
 name = "FEMMaterials"
 uuid = "0c6c1f6c-65b6-54d6-9cff-6b64003af638"
 version = "0.0.0"
@@ -10,3 +10,11 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 FEMBase = "fbcbbc08-f1bf-5204-9233-b69f5d396135"
 Tensors = "48a634ad-e948-5137-8d70-aa71f2a747f4"
+
+[extras]
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+
+[targets]
+test = ["DelimitedFiles", "Test", "Pkg"]

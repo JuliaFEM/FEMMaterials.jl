@@ -8,10 +8,9 @@ julia:
     - nightly
 
 script:
-    - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/JuliaFEM/Materials.jl"));
-                           Pkg.add(PackageSpec(path=pwd()));
-                           Pkg.build("FEMMaterials");
-                           Pkg.test("FEMMaterials"; coverage=true)'
+    - julia --project -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/JuliaFEM/Materials.jl"));
+                          Pkg.build();
+                          Pkg.test(; coverage=true)'
 
 after_success:
-    - julia -e 'cd(Pkg.dir("FEMMaterials")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+    - julia -e 'import Pkg; Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'

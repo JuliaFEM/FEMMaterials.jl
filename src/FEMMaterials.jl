@@ -1,6 +1,6 @@
 module FEMMaterials
 
-using Materials, FEMBase, LinearAlgebra, Tensors
+using Materials, FEMBase, LinearAlgebra, SparseArrays, Tensors
 
 # Material simulator to solve global system and run standard one element tests
 include("mecamatso.jl")

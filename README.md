@@ -12,10 +12,6 @@ Computational material model bindings to JuliaFEM.
 
 The JuliaFEM compability of the materials is to be tested in this package.
 
-
-[![](https://img.shields.io/badge/docs-stable-blue.svg)]()
-[![](https://img.shields.io/badge/docs-latest-blue.svg)]()
-
 [gitter-img]: https://badges.gitter.im/Join%20Chat.svg
 [gitter-url]: https://gitter.im/JuliaFEM/JuliaFEM.jl
 

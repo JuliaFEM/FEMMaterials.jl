@@ -238,6 +238,8 @@ function MecaMatSo()
                      extrapolate_initial_guess)
 end
 
+# struct Dirichlet <: BoundaryProblem end
+
 function FEMBase.run!(analysis::Analysis{MecaMatSo})
 
     props = analysis.properties
@@ -313,6 +315,7 @@ function FEMBase.run!(analysis::Analysis{MecaMatSo})
             @info("Solving for time $time, iteration # $n")
 
             operate_integration_points!(material_preprocess_iteration!, time)
+
 
             K = SparseMatrixCOO()
             C = SparseMatrixCOO()

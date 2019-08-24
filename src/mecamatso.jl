@@ -252,16 +252,40 @@ function FEMBase.run!(analysis::Analysis{MecaMatSo})
         FEMBase.initialize!(problem, time)
     end
 
-    for problem in get_problems(analysis)
-        for element in get_elements(problem)
-            for ip in get_integration_points(element)
-                material_type = getfield(Materials, problem.properties.material_model)
-                material = Material(material_type, tuple())
-                ip.fields["material"] = field(material)
-                material_preprocess_analysis!(material, element, ip, time)
+    function operate_integration_points!(func!, time)
+        func_name = last(split(string(func!),"."))
+        for problem in get_problems(analysis)
+            for element in get_elements(problem)
+                for ip in get_integration_points(element)
+                    if func_name == "material_preprocess_analysis!"
+                        material_type = getfield(Materials, problem.properties.material_model)
+                        material = Material(material_type, tuple())
+                        ip.fields["material"] = field(material)
+                        func!(material, element, ip, time)
+                    else
+                        material = ip("material", time)
+                        func!(material, element, ip, time)
+                    end
+                end
             end
         end
     end
+
+    function extrapolate_next_solution()
+        # extrapolate next solution, use linear approximation
+        nnodes = Int(length(u)/3)
+        u_dict = Dict(j => [u[3*(j-1)+k] for k in 1:3] for j in 1:nnodes)
+        du_dict = Dict(j => [du[3*(j-1)+k] for k in 1:3] for j in 1:nnodes)
+        for problem in get_problems(analysis)
+            for element in get_elements(problem)
+                connectivity = get_connectivity(element)
+                ue = tuple(collect((u_dict[j]+du_dict[j]) for j in connectivity)...)
+                update!(element, "displacement", time => ue)
+            end
+        end
+    end
+
+    operate_integration_points!(material_preprocess_analysis!, time)
 
     solution_norm = 0.0
     solution_norm_prev = Inf
@@ -274,32 +298,13 @@ function FEMBase.run!(analysis::Analysis{MecaMatSo})
         time = round(time + dtime, digits=12)
 
         if props.extrapolate_initial_guess
-            # extrapolate next solution, use linear approximation
-            if length(du) != 0
-                nnodes = Int(length(u)/3)
-                u_dict = Dict(j => [u[3*(j-1)+k] for k in 1:3] for j in 1:nnodes)
-                du_dict = Dict(j => [du[3*(j-1)+k] for k in 1:3] for j in 1:nnodes)
-                for problem in get_problems(analysis)
-                    for element in get_elements(problem)
-                        connectivity = get_connectivity(element)
-                        ue = tuple(collect((u_dict[j]+du_dict[j]) for j in connectivity)...)
-                        update!(element, "displacement", time => ue)
-                    end
-                end
-            end
+            extrapolate_next_solution()
         else
             fill!(du, 0.0)
             solution_norm_prev = Inf
         end
 
-        for problem in get_problems(analysis)
-            for element in get_elements(problem)
-                for ip in get_integration_points(element)
-                    material = ip("material", time)
-                    material_preprocess_increment!(material, element, ip, time)
-                end
-            end
-        end
+        operate_integration_points!(material_preprocess_increment!, time)
 
         n = 0
         while true
@@ -307,14 +312,7 @@ function FEMBase.run!(analysis::Analysis{MecaMatSo})
             n += 1
             @info("Solving for time $time, iteration # $n")
 
-            for problem in get_problems(analysis)
-                for element in get_elements(problem)
-                    for ip in get_integration_points(element)
-                        material = ip("material", time)
-                        material_preprocess_iteration!(material, element, ip, time)
-                    end
-                end
-            end
+            operate_integration_points!(material_preprocess_iteration!, time)
 
             K = SparseMatrixCOO()
             C = SparseMatrixCOO()
@@ -351,16 +349,7 @@ function FEMBase.run!(analysis::Analysis{MecaMatSo})
 
             du += Vector((cholesky(Symmetric(K+Kb)) \ (f+fb))[:])
 
-            nnodes = Int(dim/3)
-            u_dict = Dict(j => [u[3*(j-1)+k] for k in 1:3] for j in 1:nnodes)
-            du_dict = Dict(j => [du[3*(j-1)+k] for k in 1:3] for j in 1:nnodes)
-            for problem in get_problems(analysis)
-                for element in get_elements(problem)
-                    connectivity = get_connectivity(element)
-                    ue = tuple(collect(u_dict[j]+du_dict[j] for j in connectivity)...)
-                    update!(element, "displacement", time => ue)
-                end
-            end
+            extrapolate_next_solution()
 
             # Check convergence
             solution_norm = norm(du)
@@ -376,27 +365,13 @@ function FEMBase.run!(analysis::Analysis{MecaMatSo})
                 error("Model did not converge at time $time in $n iterations.")
             end
 
-            for problem in get_problems(analysis)
-                for element in get_elements(problem)
-                    for ip in get_integration_points(element)
-                        material = ip("material", time)
-                        material_postprocess_iteration!(material, element, ip, time)
-                    end
-                end
-            end
+            operate_integration_points!(material_postprocess_iteration!, time)
 
         end # iterations
 
         u += du
 
-        for problem in get_problems(analysis)
-            for element in get_elements(problem)
-                for ip in get_integration_points(element)
-                    material = ip("material", time)
-                    material_postprocess_increment!(material, element, ip, time)
-                end
-            end
-        end
+        operate_integration_points!(material_postprocess_increment!, time)
 
         # JuliaFEM.write_results!(analysis, time)
 
@@ -406,14 +381,7 @@ function FEMBase.run!(analysis::Analysis{MecaMatSo})
 
     end # step
 
-    for problem in get_problems(analysis)
-        for element in get_elements(problem)
-            for ip in get_integration_points(element)
-                material = ip("material", time)
-                material_postprocess_analysis!(material, element, ip, time)
-            end
-        end
-    end
+    operate_integration_points!(material_postprocess_analysis!, time)
 
     return nothing
 

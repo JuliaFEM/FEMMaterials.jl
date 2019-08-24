@@ -250,6 +250,17 @@ function FEMBase.run!(analysis::Analysis{MecaMatSo})
     la = props.la
     dla = props.dla
 
+    function hasmaterialmodel(problem)
+        try
+            # getfield(Materials, problem.properties.material_model)
+            ip = first(get_integration_points(first(get_elements(problem))))
+            ym = ip("material",time).properties.youngs_modulus
+            return true
+        catch
+            return false
+        end
+    end
+
     for problem in get_problems(analysis)
         FEMBase.initialize!(problem, time)
     end

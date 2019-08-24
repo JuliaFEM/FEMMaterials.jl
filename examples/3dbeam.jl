@@ -4,9 +4,6 @@
 using JuliaFEM, FEMMaterials, Materials, FEMBase, LinearAlgebra
 import FEMMaterials: Continuum3D, MecaMatSo
 
-# include(joinpath("..","src","mecamatso.jl"))
-# include("idealplastic.jl")
-
 mesh = abaqus_read_mesh(joinpath("plastic_beam.inp"))
 beam_elements = create_elements(mesh, "Body1")
 bc_elements_1 = create_nodal_elements(mesh, "BC1")
@@ -25,14 +22,6 @@ update!(bc_elements_2, "displacement 2", 0.0)
 update!(trac_elements, "surface pressure", 0.0 => 0.00)
 update!(trac_elements, "surface pressure", 1.0 => 2.70)
 
-# Initialize material model to integration points
-#for element in beam_elements
-#    for ip in get_integration_points(element)
-#        ip.fields["material"] = field(IdealPlastic(element, ip, 0.0))
-#        update!(ip, "stress", 0.0 => zeros(6))
-#         update!(ip, "strain", 0.0 => zeros(6))
-#     end
-# end
 
 beam = Problem(Continuum3D, "plastic beam", 3)
 beam.properties.material_model = :IdealPlastic
@@ -51,31 +40,9 @@ analysis.properties.dt = 0.05
 xdmf = Xdmf("results4"; overwrite=true)
 add_results_writer!(analysis, xdmf)
 add_problems!(analysis, beam, trac, bc)
-#time_end = 1.0
-#dtime = 0.05
 
-#for problem in get_problems(analysis)
-#    initialize!(problem, analysis.properties.time)
-#end
-# u0 = Dict(j => zeros(3) for j in 1:189)
-# update!(beam_elements, "displacement", 0.0 => u0)
-
-# while analysis.properties.time < time_end
-#    analysis.properties.time += dtime
-#    @info("time = $(analysis.properties.time)")
 run!(analysis)
 
-#    # update material internal parameters
-#    for element in beam_elements
-#        for ip in get_integration_points(element)
-#            material = ip("material", analysis.properties.time)
-#            material.plastic_multiplier += material.dplastic_multiplier
-#            material.plastic_strain += material.dplastic_strain
-#            material.dplastic_multiplier = 0.0
-#            fill!(material.dplastic_strain, 0.0)
-#        end
-#    end
-#end
 
 close(xdmf)
 

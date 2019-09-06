@@ -198,6 +198,8 @@ function material_postprocess_increment!(material::Material{ViscoPlastic}, eleme
     return nothing
 end
 
+include("fem_mfront.jl")
+
 export material_preprocess_analysis!, material_preprocess_increment!,
        material_preprocess_iteration!, material_postprocess_analysis!,
        material_postprocess_increment!, material_postprocess_iteration!

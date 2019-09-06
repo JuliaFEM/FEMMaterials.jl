@@ -113,8 +113,8 @@ function FEMBase.assemble_elements!(problem::Problem{Continuum3D},
 
             # Calculate stress response
             integrate_material!(material)
-            D = material.jacobian
-            S = material.stress + material.dstress
+            D = material.variables_new.jacobian
+            S = material.variables_new.stress
 
             # Material stiffness matrix
             Km += w*BL'*D*BL
@@ -258,8 +258,11 @@ function FEMBase.run!(analysis::Analysis{MecaMatSo})
             for element in get_elements(problem)
                 for ip in get_integration_points(element)
                     if func_name == "material_preprocess_analysis!"
-                        material_type = getfield(Materials, problem.properties.material_model)
-                        material = Material(material_type, tuple())
+                        try
+                            material = eval(problem.properties.material_model)()
+                        catch
+                            material = nothing
+                        end
                         ip.fields["material"] = field(material)
                         func!(material, element, ip, time)
                     else

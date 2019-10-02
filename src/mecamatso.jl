@@ -10,7 +10,7 @@ mutable struct Continuum3D <: FieldProblem
     material_model :: Symbol
 end
 
-Continuum3D() = Continuum3D(:IdealPlastic)
+Continuum3D() = Continuum3D(:nothing)
 FEMBase.get_unknown_field_name(::Continuum3D) = "displacement"
 
 abstract type AbstractLoading end
@@ -240,6 +240,8 @@ function MecaMatSo()
                      extrapolate_initial_guess)
 end
 
+# struct Dirichlet <: BoundaryProblem end
+
 function FEMBase.run!(analysis::Analysis{MecaMatSo})
 
     props = analysis.properties
@@ -249,6 +251,17 @@ function FEMBase.run!(analysis::Analysis{MecaMatSo})
     du = props.du
     la = props.la
     dla = props.dla
+
+    function hasmaterialmodel(problem)
+        try
+            # getfield(Materials, problem.properties.material_model)
+            ip = first(get_integration_points(first(get_elements(problem))))
+            ym = ip("material",time).properties.youngs_modulus
+            return true
+        catch
+            return false
+        end
+    end
 
     for problem in get_problems(analysis)
         FEMBase.initialize!(problem, time)
@@ -321,6 +334,7 @@ function FEMBase.run!(analysis::Analysis{MecaMatSo})
 
             operate_integration_points!(material_preprocess_iteration!, time)
 
+
             K = SparseMatrixCOO()
             C = SparseMatrixCOO()
             f = SparseMatrixCOO()
@@ -381,7 +395,7 @@ function FEMBase.run!(analysis::Analysis{MecaMatSo})
 
         operate_integration_points!(material_postprocess_increment!, time)
 
-        # JuliaFEM.write_results!(analysis, time)
+        JuliaFEM.write_results!(analysis, time)
 
         if time == props.t1
             @info("Simulation step ready.")

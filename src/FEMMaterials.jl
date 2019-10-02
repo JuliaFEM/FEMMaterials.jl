@@ -10,196 +10,65 @@ export get_one_element_material_analysis, AxialStrainLoading, ShearStrainLoading
 include("simulator.jl")
 export Simulator
 
-material_preprocess_increment!(material::Material{<:AbstractMaterial}, element, ip, time) = nothing
-material_postprocess_analysis!(material::Material{<:AbstractMaterial}, element, ip, time) = nothing
-material_postprocess_increment!(material::Material{<:AbstractMaterial}, element, ip, time) = nothing
-material_postprocess_iteration!(material::Material{<:AbstractMaterial}, element, ip, time) = nothing
+# tovoigt method for arrays
+Tensors.tovoigt(x::Array{T, 2}) where T = [x[1,1], x[2,2], x[3,3], x[2,3], x[1,3], x[1,2]]
 
-function material_preprocess_analysis!(material::Material{M}, element, ip, time) where {M<:AbstractMaterial}
-    if !haskey(ip, "stress")
-        update!(ip, "stress", time => copy(material.stress))
+material_preprocess_increment!(material::M, element, ip, time) where {M<:AbstractMaterial} = nothing
+material_postprocess_analysis!(material::M, element, ip, time) where {M<:AbstractMaterial} = nothing
+material_postprocess_increment!(material::M, element, ip, time) where {M<:AbstractMaterial} = nothing
+material_postprocess_iteration!(material::M, element, ip, time) where {M<:AbstractMaterial} = nothing
+
+function update_ip!(material::M, ip, time) where {M<:AbstractMaterial}
+    variables = fieldnames(typeof(material.variables))
+    for variable in variables
+        update!(ip, String(variable), time => copy(getfield(material.variables, variable)))
     end
-    if !haskey(ip, "strain")
-        update!(ip, "strain", time => copy(material.strain))
+
+    drivers = fieldnames(typeof(material.drivers))
+    for driver in drivers
+        update!(ip, String(driver), time => copy(getfield(material.drivers, driver)))
     end
-    material.time = time
-    return nothing
 end
 
-function material_preprocess_iteration!(material::Material{M}, element, ip, time) where {M<:AbstractMaterial}
+# Copying to ip's the duplicate data?
+function material_preprocess_analysis!(material::M, element, ip, time) where {M<:AbstractMaterial}
+    update_ip!(material, ip, time)
+    # Read parameter values
+    expr = [element(String(p), ip, time) for p in fieldnames(typeof(material.parameters))]
+    material.parameters = typeof(material.parameters)(expr...)
+end
+
+function material_preprocess_iteration!(material::M, element, ip, time) where {M<:AbstractMaterial}
     gradu = element("displacement", ip, time, Val{:Grad})
-    strain = 0.5*(gradu + gradu')
-    strainvec = [strain[1,1], strain[2,2], strain[3,3],
-                 2.0*strain[1,2], 2.0*strain[2,3], 2.0*strain[3,1]]
-    material.dstrain = strainvec - material.strain
+    strain = SymmetricTensor{2,3, Float64}((i,j) -> 0.5*(gradu[i,j]+gradu[j,i]))
+    # Check for vector or tensor form needs to be implemented later
+    dstrain = strain - material.drivers.strain
+    #@info("time = $time, dstrain = $dstrain")
+    material.ddrivers.strain = dstrain
     return nothing
 end
 
-material_preprocess_analysis!(material::Material{IdealPlastic}, element::Element{Poi1}, ip, time) = nothing
-material_postprocess_analysis!(material::Material{IdealPlastic}, element::Element{Poi1}, ip, time) = nothing
-material_preprocess_increment!(material::Material{IdealPlastic}, element::Element{Poi1}, ip, time) = nothing
-material_postprocess_increment!(material::Material{IdealPlastic}, element::Element{Poi1}, ip, time) = nothing
-material_preprocess_iteration!(material::Material{IdealPlastic}, element::Element{Poi1}, ip, time) = nothing
-material_postprocess_iteration!(material::Material{IdealPlastic}, element::Element{Poi1}, ip, time) = nothing
+material_preprocess_analysis!(material::M, element::Element{Poi1}, ip, time) where {M<:AbstractMaterial} = nothing
+material_postprocess_analysis!(material::M, element::Element{Poi1}, ip, time) where {M<:AbstractMaterial} = nothing
+material_preprocess_increment!(material::M, element::Element{Poi1}, ip, time) where {M<:AbstractMaterial} = nothing
+material_postprocess_increment!(material::M, element::Element{Poi1}, ip, time) where {M<:AbstractMaterial} = nothing
+material_preprocess_iteration!(material::M, element::Element{Poi1}, ip, time) where {M<:AbstractMaterial} = nothing
+material_postprocess_iteration!(material::M, element::Element{Poi1}, ip, time) where {M<:AbstractMaterial} = nothing
 
-material_preprocess_analysis!(material::Material{Chaboche}, element::Element{Poi1}, ip, time) = nothing
-material_postprocess_analysis!(material::Material{Chaboche}, element::Element{Poi1}, ip, time) = nothing
-material_preprocess_increment!(material::Material{Chaboche}, element::Element{Poi1}, ip, time) = nothing
-material_postprocess_increment!(material::Material{Chaboche}, element::Element{Poi1}, ip, time) = nothing
-material_preprocess_iteration!(material::Material{Chaboche}, element::Element{Poi1}, ip, time) = nothing
-material_postprocess_iteration!(material::Material{Chaboche}, element::Element{Poi1}, ip, time) = nothing
-
-material_preprocess_analysis!(material::Material{ViscoPlastic}, element::Element{Poi1}, ip, time) = nothing
-material_postprocess_analysis!(material::Material{ViscoPlastic}, element::Element{Poi1}, ip, time) = nothing
-material_preprocess_increment!(material::Material{ViscoPlastic}, element::Element{Poi1}, ip, time) = nothing
-material_postprocess_increment!(material::Material{ViscoPlastic}, element::Element{Poi1}, ip, time) = nothing
-material_preprocess_iteration!(material::Material{ViscoPlastic}, element::Element{Poi1}, ip, time) = nothing
-material_postprocess_iteration!(material::Material{ViscoPlastic}, element::Element{Poi1}, ip, time) = nothing
-
-### Chaboche ###
-
-function material_preprocess_analysis!(material::Material{Chaboche}, element, ip, time)
-    update!(ip, "plastic strain", 0.0 => zeros(6))
-    update!(ip, "stress", 0.0 => zeros(6))
-    update!(ip, "strain", 0.0 => zeros(6))
-    update!(ip, "backstress 1", 0.0 => zeros(6))
-    update!(ip, "backstress 2", 0.0 => zeros(6))
-    update!(ip, "cumulative equivalent plastic strain", 0.0 => 0.0)
-    update!(ip, "R", 0.0 => 0.0)
+function material_preprocess_increment!(material::M, element, ip, time) where {M<:AbstractMaterial}
+    # Update time increment
+    dtime = time - material.drivers.time
+    material.ddrivers.time = dtime
+    # Update parameters
+    expr = [element(String(p), ip, time) - getfield(material.parameters, p) for p in fieldnames(typeof(material.parameters))]
+    material.dparameters = typeof(material.dparameters)(expr...)
     return nothing
 end
 
-function material_preprocess_increment!(material::Material{Chaboche}, element, ip, time)
-    mat = material.properties
-    material.dtime = time - material.time
-    mat.youngs_modulus = element("youngs modulus", ip, time)
-    mat.poissons_ratio = element("poissons ratio", ip, time)
-    mat.yield_stress = element("yield stress", ip, time)
-    mat.K_n = element("K_n", ip, time)
-    mat.n_n = element("n_n", ip, time)
-    mat.C_1 = element("C_1", ip, time)
-    mat.D_1 = element("D_1", ip, time)
-    mat.C_2 = element("C_2", ip, time)
-    mat.D_2 = element("D_2", ip, time)
-    mat.Q = element("Q", ip, time)
-    mat.b = element("b", ip, time)
-    return nothing
+function material_postprocess_increment!(material::M, element, ip, time) where {M<:AbstractMaterial}
+    update_material!(material)
+    # Store history data to integration points
+    update_ip!(material, ip, time)
 end
-
-function material_postprocess_increment!(material::Material{Chaboche}, element, ip, time)
-    # preprocess_increment!(material, element, ip, time)
-    # integrate_material!(material)
-    mat = material.properties
-    material.stress .+= material.dstress
-    material.strain .+= material.dstrain
-    material.time += material.dtime
-    mat.plastic_strain .+= mat.dplastic_strain
-    mat.cumulative_equivalent_plastic_strain += mat.dcumulative_equivalent_plastic_strain
-    mat.backstress1 .+= mat.dbackstress1
-    mat.backstress2 .+= mat.dbackstress2
-    mat.R += mat.dR
-    update!(ip, "stress", time => copy(material.stress))
-    update!(ip, "strain", time => copy(material.strain))
-    update!(ip, "plastic strain", time => copy(mat.plastic_strain))
-    update!(ip, "cumulative equivalent plastic strain", time => copy(mat.cumulative_equivalent_plastic_strain))
-    update!(ip, "backstress 1", time => copy(mat.backstress1))
-    update!(ip, "backstress 2", time => copy(mat.backstress2))
-    update!(ip, "R", time => copy(mat.R))
-    return nothing
-end
-
-### IdealPlastic ###
-
-function material_preprocess_increment!(material::Material{IdealPlastic}, element, ip, time)
-    material.dtime = time - material.time
-
-    # interpolate / update fields from elements to material
-    mat = material.properties
-    mat.youngs_modulus = element("youngs modulus", ip, time)
-    mat.poissons_ratio = element("poissons ratio", ip, time)
-
-    if haskey(element, "yield stress")
-        mat.yield_stress = element("yield stress", ip, time)
-    else
-        mat.yield_stress = Inf
-    end
-
-    if haskey(element, "plastic strain")
-        plastic_strain = element("plastic strain", ip, time)
-    end
-
-    # reset all incremental variables ready for next iteration
-    fill!(mat.dplastic_strain, 0.0)
-    mat.dplastic_multiplier = 0.0
-
-    return nothing
-end
-
-function material_postprocess_increment!(material::Material{IdealPlastic}, element, ip, time)
-    props = material.properties
-    # material_preprocess_iteration!(material, element, ip, time)
-    # integrate_material!(material) # one more time!
-    material.stress += material.dstress
-    material.strain += material.dstrain
-    material.time += material.dtime
-    props.plastic_strain += props.dplastic_strain
-    props.plastic_multiplier += props.dplastic_multiplier
-    update!(ip, "stress", time => copy(material.stress))
-    update!(ip, "strain", time => copy(material.strain))
-    return nothing
-end
-
-##################
-# Viscoplastic JuliaFEM hooks #
-##################
-
-function material_preprocess_increment!(material::Material{ViscoPlastic}, element, ip, time)
-    material.dtime = time - material.time
-
-    # interpolate / update fields from elements to material
-    mat = material.properties
-    mat.youngs_modulus = element("youngs modulus", ip, time)
-    mat.poissons_ratio = element("poissons ratio", ip, time)
-
-    if haskey(element, "yield stress")
-        mat.yield_stress = element("yield stress", ip, time)
-    else
-        mat.yield_stress = Inf
-    end
-
-    if haskey(element, "plastic strain")
-        plastic_strain = element("plastic strain", ip, time)
-    end
-
-    # reset all incremental variables ready for next iteration
-    fill!(mat.dplastic_strain, 0.0)
-    mat.dplastic_multiplier = 0.0
-
-    return nothing
-end
-
-
-# """ Material postprocess step after increment finish. """
-# function postprocess_increment!(material::Material{M}, element, ip, time) where {M}
-#     return nothing
-# end
-
-function material_postprocess_increment!(material::Material{ViscoPlastic}, element, ip, time)
-    props = material.properties
-    # material_preprocess_iteration!(material, element, ip, time)
-    # integrate_material!(material) # one more time!
-    material.stress += material.dstress
-    material.strain += material.dstrain
-    material.time += material.dtime
-    props.plastic_strain += props.dplastic_strain
-    props.plastic_multiplier += props.dplastic_multiplier
-    update!(ip, "stress", time => copy(material.stress))
-    update!(ip, "strain", time => copy(material.strain))
-    return nothing
-end
-
-export material_preprocess_analysis!, material_preprocess_increment!,
-       material_preprocess_iteration!, material_postprocess_analysis!,
-       material_postprocess_increment!, material_postprocess_iteration!
 
 end

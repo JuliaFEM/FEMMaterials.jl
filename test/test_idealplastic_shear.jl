@@ -1,13 +1,13 @@
 # This file is a part of JuliaFEM.
 # License is MIT: see https://github.com/JuliaFEM/Materials.jl/blob/master/LICENSE
 
-using FEMMaterials, Test
+using FEMMaterials, Tensors, Test
 
 
 analysis, problem, element, bc_elements, ip = get_one_element_material_analysis(:IdealPlastic)
-update!(element, "youngs modulus", 200.0e3)
-update!(element, "poissons ratio", 0.3)
-update!(element, "yield stress", 100.0)
+update!(element, "youngs_modulus", 200.0e3)
+update!(element, "poissons_ratio", 0.3)
+update!(element, "yield_stress", 100.0)
 
 times = [0.0]
 loads = [0.0]
@@ -35,6 +35,6 @@ update_bc_elements!(bc_elements, loading)
 
 analysis.properties.t1 = maximum(times)
 run!(analysis)
-s31 = [ip("stress", t)[6] for t in times]
+s31 = [tovoigt(ip("stress", t))[5] for t in times]
 s31_expected = [0.0, syield/sqrt(3.0), syield/sqrt(3.0), 0.0, -syield/sqrt(3.0)]
 @test isapprox(s31, s31_expected; rtol=1.0e-2)

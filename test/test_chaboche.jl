@@ -23,20 +23,32 @@ e33_ = data[:,13]
 
 strains = [[e11_[i], e22_[i], e33_[i], e23_[i], e13_[i], e12_[i]] for i in 1:length(ts)]
 
-mat = Material(Chaboche, ())
-mat.properties.youngs_modulus = 200.0e3
-mat.properties.poissons_ratio = 0.3
-mat.properties.yield_stress = 100.0
-mat.properties.K_n = 100.0
-mat.properties.n_n = 10.0
-mat.properties.C_1 = 10000.0
-mat.properties.D_1 = 100.0
-mat.properties.C_2 = 50000.0
-mat.properties.D_2 = 1000.0
-mat.properties.Q = 50.0
-mat.properties.b = 0.1
+# mat = Material(Chaboche, ())
+# mat.properties.youngs_modulus = 200.0e3
+# mat.properties.poissons_ratio = 0.3
+# mat.properties.yield_stress = 100.0
+# mat.properties.K_n = 100.0
+# mat.properties.n_n = 10.0
+# mat.properties.C_1 = 10000.0
+# mat.properties.D_1 = 100.0
+# mat.properties.C_2 = 50000.0
+# mat.properties.D_2 = 1000.0
+# mat.properties.Q = 50.0
+# mat.properties.b = 0.1
+parameters = ChabocheParameterState(E = 200.0e3,
+                                    nu = 0.3,
+                                    R0 = 100.0,
+                                    Kn = 100.0,
+                                    nn = 10.0,
+                                    C1 = 10000.0,
+                                    D1 = 100.0,
+                                    C2 = 50000.0,
+                                    D2 = 1000.0,
+                                    Q = 50.0,
+                                    b = 0.1)
+mat = Chaboche(parameters = parameters)
 
-mat.stress = zeros(6)
+
 sim = Simulator(mat)
 FEMMaterials.initialize!(sim, strains, ts)
 t0 = time()

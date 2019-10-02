@@ -1,6 +1,6 @@
 module FEMMaterials
 
-using Materials, FEMBase, LinearAlgebra, SparseArrays, Tensors
+using Materials, JuliaFEM, FEMBase, LinearAlgebra, SparseArrays, Tensors
 
 # Material simulator to solve global system and run standard one element tests
 include("mecamatso.jl")
@@ -17,6 +17,14 @@ material_preprocess_increment!(material::M, element, ip, time) where {M<:Abstrac
 material_postprocess_analysis!(material::M, element, ip, time) where {M<:AbstractMaterial} = nothing
 material_postprocess_increment!(material::M, element, ip, time) where {M<:AbstractMaterial} = nothing
 material_postprocess_iteration!(material::M, element, ip, time) where {M<:AbstractMaterial} = nothing
+
+material_preprocess_analysis!(material::Nothing, element, ip, time) = nothing
+material_preprocess_increment!(material::Nothing, element, ip, time) = nothing
+material_preprocess_iteration!(material::Nothing, element, ip, time) = nothing
+material_postprocess_analysis!(material::Nothing, element, ip, time) = nothing
+material_postprocess_increment!(material::Nothing, element, ip, time) = nothing
+material_postprocess_iteration!(material::Nothing, element, ip, time) = nothing
+
 
 function update_ip!(material::M, ip, time) where {M<:AbstractMaterial}
     variables = fieldnames(typeof(material.variables))

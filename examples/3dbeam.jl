@@ -10,10 +10,10 @@ bc_elements_1 = create_nodal_elements(mesh, "BC1")
 bc_elements_2 = create_nodal_elements(mesh, "BC2")
 trac_elements = create_surface_elements(mesh, "PRESSURE")
 
-update!(beam_elements, "youngs modulus", 200.0e3)
-update!(beam_elements, "poissons ratio", 0.3)
-update!(beam_elements, "yield stress", 100.0)
-update!(beam_elements, "plastic strain", 0.0 => zeros(3,3))
+update!(beam_elements, "youngs_modulus", 200.0e3)
+update!(beam_elements, "poissons_ratio", 0.3)
+update!(beam_elements, "yield_stress", 100.0)
+
 for j in 1:3
     update!(bc_elements_1, "displacement $j", 0.0)
 end

@@ -10,7 +10,7 @@ mutable struct Continuum3D <: FieldProblem
     material_model :: Symbol
 end
 
-Continuum3D() = Continuum3D(:IdealPlastic)
+Continuum3D() = Continuum3D(:nothing)
 FEMBase.get_unknown_field_name(::Continuum3D) = "displacement"
 
 abstract type AbstractLoading end
@@ -395,7 +395,7 @@ function FEMBase.run!(analysis::Analysis{MecaMatSo})
 
         operate_integration_points!(material_postprocess_increment!, time)
 
-        # JuliaFEM.write_results!(analysis, time)
+        JuliaFEM.write_results!(analysis, time)
 
         if time == props.t1
             @info("Simulation step ready.")

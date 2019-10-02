@@ -103,12 +103,12 @@ function FEMBase.assemble_elements!(problem::Problem{Continuum3D},
                 BL[1, 3*(i-1)+1] = dN[1,i]
                 BL[2, 3*(i-1)+2] = dN[2,i]
                 BL[3, 3*(i-1)+3] = dN[3,i]
-                BL[4, 3*(i-1)+1] = dN[2,i]
-                BL[4, 3*(i-1)+2] = dN[1,i]
-                BL[5, 3*(i-1)+2] = dN[3,i]
-                BL[5, 3*(i-1)+3] = dN[2,i]
-                BL[6, 3*(i-1)+1] = dN[3,i]
-                BL[6, 3*(i-1)+3] = dN[1,i]
+                BL[6, 3*(i-1)+1] = dN[2,i]
+                BL[6, 3*(i-1)+2] = dN[1,i]
+                BL[4, 3*(i-1)+2] = dN[3,i]
+                BL[4, 3*(i-1)+3] = dN[2,i]
+                BL[5, 3*(i-1)+1] = dN[3,i]
+                BL[5, 3*(i-1)+3] = dN[1,i]
             end
 
             # Calculate stress response
@@ -260,11 +260,12 @@ function FEMBase.run!(analysis::Analysis{MecaMatSo})
             for element in get_elements(problem)
                 for ip in get_integration_points(element)
                     if func_name == "material_preprocess_analysis!"
-                        #material_type = getfield(Materials, problem.properties.material_model)
-                        #material = Material(material_type, tuple())
-                        # This is where the material model is initialized in the integration points
-                        material_type = problem.properties.material_model
-                        material = eval(:($material_type()))
+                        try
+                            material_type = problem.properties.material_model
+                            material = eval(:($material_type()))
+                        catch
+                            material = nothing
+                        end
                         ip.fields["material"] = field(material)
                         func!(material, element, ip, time)
                     else

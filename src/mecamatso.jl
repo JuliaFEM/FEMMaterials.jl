@@ -103,12 +103,12 @@ function FEMBase.assemble_elements!(problem::Problem{Continuum3D},
                 BL[1, 3*(i-1)+1] = dN[1,i]
                 BL[2, 3*(i-1)+2] = dN[2,i]
                 BL[3, 3*(i-1)+3] = dN[3,i]
-                BL[4, 3*(i-1)+1] = dN[2,i]
-                BL[4, 3*(i-1)+2] = dN[1,i]
-                BL[5, 3*(i-1)+2] = dN[3,i]
-                BL[5, 3*(i-1)+3] = dN[2,i]
-                BL[6, 3*(i-1)+1] = dN[3,i]
-                BL[6, 3*(i-1)+3] = dN[1,i]
+                BL[6, 3*(i-1)+1] = dN[2,i]
+                BL[6, 3*(i-1)+2] = dN[1,i]
+                BL[4, 3*(i-1)+2] = dN[3,i]
+                BL[4, 3*(i-1)+3] = dN[2,i]
+                BL[5, 3*(i-1)+1] = dN[3,i]
+                BL[5, 3*(i-1)+3] = dN[1,i]
             end
 
             # Calculate stress response

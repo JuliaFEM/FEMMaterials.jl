@@ -19,7 +19,9 @@ using FEMBase, Materials, FEMMaterials, Test
     @testset "test chaboche material model with shear strain" begin
         include("test_chaboche_shear.jl")
     end
+    """
     @testset "test viscoplastic" begin
         include("test_viscoplastic.jl")
     end
+    """
 end

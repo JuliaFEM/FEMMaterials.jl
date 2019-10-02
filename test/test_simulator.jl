@@ -5,11 +5,17 @@ using Materials, FEMMaterials, Test
 
 m1 = 1.0e-3*[-0.3, -0.3, 1.0, 0.0, 0.0, 0.0]
 m2 = 1.0e-3*[-0.5, -0.5, 1.0, 0.0, 0.0, 0.0]
-mat = Material(IdealPlastic, ())
-mat.properties.youngs_modulus = 200.0e3
-mat.properties.poissons_ratio = 0.3
-mat.properties.yield_stress = 100.0
-mat.stress = zeros(6)
+# mat = Material(IdealPlastic, ())
+# mat.properties.youngs_modulus = 200.0e3
+# mat.properties.poissons_ratio = 0.3
+# mat.properties.yield_stress = 100.0
+# mat.stress = zeros(6)
+
+parameters = IdealPlasticParameterState(youngs_modulus = 200.0e3,
+                                        poissons_ratio = 0.3,
+                                        yield_stress = 100.0)
+
+mat = IdealPlastic(parameters=parameters)
 times = [0.0]
 strains = [zeros(6)]
 dt = 0.5

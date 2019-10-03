@@ -51,6 +51,21 @@ function generate_docs(pkg)
 
 end
 
+function generate_readme(pkg)
+    pkg_dir = dirname(dirname(pathof(pkg)))
+    function add_header(content)
+        lines = read(joinpath(pkg_dir,"docs","readme_header.txt"), String)
+        content = lines * content
+    end
+    function preprocess(content)
+        content = add_datetime(content)
+        content = remove_license(content)
+        content = add_header(content)
+    end
+    fil = joinpath(pkg_dir, "examples", "example_3dbeam.jl")
+    Literate.markdown(fil, pkg_dir; name="README", documenter=false, preprocess=preprocess)
+end
+
 example_pages = generate_docs(FEMMaterials)
 
 makedocs(modules=[FEMMaterials],
@@ -62,3 +77,5 @@ makedocs(modules=[FEMMaterials],
                   "Examples" => example_pages
                  ]
         )
+
+generate_readme(FEMMaterials)

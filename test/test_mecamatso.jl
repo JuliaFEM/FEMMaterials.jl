@@ -17,4 +17,4 @@ analysis.properties.t1 = maximum(times)
 run!(analysis)
 s33 = [tovoigt(ip("stress", t))[3] for t in times]
 s33_expected = [0.0, 100.0, -100.0, 100.0]
-@test isapprox(s33, s33_expected; rtol=1.0e-1)
+@test isapprox(s33, s33_expected; rtol=1.0e-2)

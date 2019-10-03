@@ -4,7 +4,7 @@
 using JuliaFEM, FEMMaterials, Materials, FEMBase, LinearAlgebra
 import FEMMaterials: Continuum3D, MecaMatSo
 
-mesh = abaqus_read_mesh(joinpath("plastic_beam.inp"))
+mesh = abaqus_read_mesh(joinpath("data_3dbeam","plastic_beam.inp"))
 beam_elements = create_elements(mesh, "Body1")
 bc_elements_1 = create_nodal_elements(mesh, "BC1")
 bc_elements_2 = create_nodal_elements(mesh, "BC2")

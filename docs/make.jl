@@ -41,7 +41,8 @@ function generate_docs(pkg)
     exampledir = joinpath(pkg_dir, "examples")
     outdir = joinpath(pkg_dir, "docs", "src", "examples")
     example_pages = []
-    for example_file in ["3dbeam.jl"]
+    for example_file in readdir(exampledir)
+        startswith(example_file, "example_") || continue
         Literate.markdown(joinpath(exampledir, example_file), outdir; documenter=true, preprocess=preprocess)
         generated_example_file = joinpath("examples", first(splitext(example_file)) * ".md")
         push!(example_pages, generated_example_file)

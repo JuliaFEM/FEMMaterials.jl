@@ -8,7 +8,7 @@
 # [![][issues-img]][issues-url]
 #
 # Computational material model bindings to JuliaFEM. The JuliaFEM compability of the materials is to be tested in this package.
-# Here is one usage example.
+# Here is one usage example. Note this README file is generated edit [`readme_header.txt`]([readme-header]) instead
 #
 # [gitter-img]: https://badges.gitter.im/Join%20Chat.svg
 # [gitter-url]: https://gitter.im/JuliaFEM/JuliaFEM.jl
@@ -26,3 +26,5 @@
 #
 # [issues-img]: https://img.shields.io/github/issues/JuliaFEM/FEMMaterials.jl.svg
 # [issues-url]: https://github.com/JuliaFEM/FEMMaterials.jl/issues
+#
+# [readme-header]: https://raw.githubusercontent.com/JuliaFEM/FEMMaterials.jl/master/docs/readme_header.txt

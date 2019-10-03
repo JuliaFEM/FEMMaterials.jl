@@ -44,6 +44,7 @@ function generate_docs(pkg)
     for example_file in readdir(exampledir)
         startswith(example_file, "example_") || continue
         Literate.markdown(joinpath(exampledir, example_file), outdir; documenter=true, preprocess=preprocess)
+        Literate.notebook(joinpath(exampledir, example_file), joinpath(pkg_dir,"notebooks"); documenter=true, preprocess=preprocess, execute=true)
         generated_example_file = joinpath("examples", first(splitext(example_file)) * ".md")
         push!(example_pages, generated_example_file)
     end

@@ -5,13 +5,14 @@
 
 using JuliaFEM, FEMMaterials, Materials, FEMBase, LinearAlgebra, Plots
 import FEMMaterials: Continuum3D, MecaMatSo
+pkg_dir = dirname(dirname(pathof(FEMMaterials)))
 
 # ## Let's read the discretized geometry and create boundary conditions
 #
 # File `plactic_beam.inp` is created with 3rd party meshing tool.
 # File contains surface sets `BC1`, `BC2` and `PRESSURE` as well
 # element set `Body1`
-mesh = abaqus_read_mesh(joinpath("data_3dbeam","plastic_beam.inp"))
+mesh = abaqus_read_mesh(joinpath(pkg_dir,"examples","data_3dbeam","plastic_beam.inp"))
 beam_elements = create_elements(mesh, "Body1")
 bc_elements_1 = create_nodal_elements(mesh, "BC1")
 bc_elements_2 = create_nodal_elements(mesh, "BC2")
@@ -85,7 +86,12 @@ for t in tim
     push!(vmis_, maximum(vmis))
 end
 plot(tim,vmis_)
+#-
 png("max_vonmises_stress_as_a_function_of_time")
+
+# ![max_vonmises_stress_as_a_function_of_time][vonmises]
+# [vonmises]: https://raw.githubusercontent.com/JuliaFEM/FEMMaterials.jl/master/notebooks/max_vonmises_stress_as_a_function_of_time.png
+
 
 # ## The second post-processing step is to collect displacements
 #
@@ -97,4 +103,8 @@ for t in tim
     push!(u2_96, beam("displacement", t)[96][2])
 end
 plot(tim,u2_96)
+#-
 png("node_96_displacement_as_a_function_of_time")
+
+# ![node_96_displacement_as_a_function_of_time][displacement]
+# [displacement]: https://raw.githubusercontent.com/JuliaFEM/FEMMaterials.jl/master/notebooks/node_96_displacement_as_a_function_of_time.png

@@ -1,18 +1,21 @@
 # This file is a part of JuliaFEM.
 # License is MIT: see https://github.com/JuliaFEM/FEMMaterials.jl/blob/master/LICENSE
 
-using JuliaFEM, FEMMaterials, Materials, FEMBase, LinearAlgebra
+# # 3D Beam with ideal plastic material model from Materials.jl
+
+using JuliaFEM, FEMMaterials, Materials, FEMBase, LinearAlgebra, Plots
 import FEMMaterials: Continuum3D, MecaMatSo
 
+# ## Let's read the discretized geometry and create boundary conditions
+#
+# File `plactic_beam.inp` is created with 3rd party meshing tool.
+# File contains surface sets `BC1`, `BC2` and `PRESSURE` as well
+# element set `Body1`
 mesh = abaqus_read_mesh(joinpath("data_3dbeam","plastic_beam.inp"))
 beam_elements = create_elements(mesh, "Body1")
 bc_elements_1 = create_nodal_elements(mesh, "BC1")
 bc_elements_2 = create_nodal_elements(mesh, "BC2")
 trac_elements = create_surface_elements(mesh, "PRESSURE")
-
-update!(beam_elements, "youngs_modulus", 200.0e3)
-update!(beam_elements, "poissons_ratio", 0.3)
-update!(beam_elements, "yield_stress", 100.0)
 
 for j in 1:3
     update!(bc_elements_1, "displacement $j", 0.0)
@@ -21,32 +24,54 @@ update!(bc_elements_2, "displacement 1", 0.0)
 update!(bc_elements_2, "displacement 2", 0.0)
 update!(trac_elements, "surface pressure", 0.0 => 0.00)
 update!(trac_elements, "surface pressure", 1.0 => 2.70)
-
-
-beam = Problem(Continuum3D, "plastic beam", 3)
-beam.properties.material_model = :IdealPlastic
 trac = Problem(Continuum3D, "traction", 3)
 bc = Problem(Dirichlet, "fix displacement", 3, "displacement")
-add_elements!(beam, beam_elements)
 add_elements!(trac, trac_elements)
 add_elements!(bc, bc_elements_1)
 add_elements!(bc, bc_elements_2)
+
+# ## Next, we set the material properties for each element set
+#
+# In this example we only have the one element set `Body1` in variable `beam_elements`
+
+update!(beam_elements, "youngs_modulus", 200.0e3)
+update!(beam_elements, "poissons_ratio", 0.3)
+update!(beam_elements, "yield_stress", 100.0)
+
+beam = Problem(Continuum3D, "plastic beam", 3)
+beam.properties.material_model = :IdealPlastic
+add_elements!(beam, beam_elements)
+
+
+# ## And next, we setup the analysis
+#
+# `t0`, `t1`, and `dt` are the start time, end time, and time step respectively.
 
 analysis = Analysis(MecaMatSo, "solve problem")
 analysis.properties.max_iterations = 50
 analysis.properties.t0 = 0.0
 analysis.properties.t1 = 1.0
 analysis.properties.dt = 0.05
-xdmf = Xdmf("results4"; overwrite=true)
+
+# ## Writing the results needs to be setup as well
+
+xdmf = Xdmf("3dbeam_results_output"; overwrite=true)
 add_results_writer!(analysis, xdmf)
+
+# ## Finally, adding the problems together and running the analysis
+#
+# All earlier defined problems are added together. Also result file need to be
+# closed to flush everything from the writing buffer to the file.
 add_problems!(analysis, beam, trac, bc)
-
 run!(analysis)
-
-
 close(xdmf)
 
-#tim = range(0.0, stop=1.0, length=20)
+
+# ## The first post-processing step is to calculate maximum von Mises stresses
+#
+# `vmis` contains all integration points stresses and `vmis_` just the maximum.
+# Let's plot the maximum von Mises stress as a function of time
+
 tim = 0.0:0.05:1.0
 vmis_ = []
 for t in tim
@@ -54,44 +79,22 @@ for t in tim
     for element in beam_elements
         for ip in get_integration_points(element)
             s11, s22, s33, s12, s23, s31 = ip("stress", t)
-            #@info("s33 = $s33")
             push!(vmis, sqrt(1/2*((s11-s22)^2 + (s22-s33)^2 + (s33-s11)^2 + 6*(s12^2+s23^2+s31^2))))
-            #stress_v = ip("stress_v", t)
-            #push!(vmis, stress_v)
         end
     end
     push!(vmis_, maximum(vmis))
 end
+plot(tim,vmis_)
+png("max_vonmises_stress_as_a_function_of_time")
+
+# ## The second post-processing step is to collect displacements
+#
+# Here as an example node number 96 second degree of freedom displacement is
+# extracted.
 
 u2_96 = []
 for t in tim
     push!(u2_96, beam("displacement", t)[96][2])
 end
-
-#using Plots
-if false
-    ip1 = first(get_integration_points(body_element))
-    t = range(0, stop=1.0, length=50)
-    s11(t) = ip1("stress", t)[1]
-    s22(t) = ip1("stress", t)[2]
-    s33(t) = ip1("stress", t)[3]
-    s12(t) = ip1("stress", t)[4]
-    s23(t) = ip1("stress", t)[5]
-    s31(t) = ip1("stress", t)[6]
-    e33(t) = ip1("strain", t)[3]
-    s(t) = ip1("stress", t)
-    function vmis(t)
-        s11, s22, s33, s12, s23, s31 = ip1("stress", t)
-        return sqrt(1/2*((s11-s22)^2 + (s22-s33)^2 + (s33-s11)^2 + 6*(s12^2+s23^2+s31^2)))
-    end
-    y = vmis.(t)
-    x = e33.(t)
-    plot(x, y)
-    # labels = ["s11" "s22" "s33" "s12" "s23" "s31"]
-    # plot(t, s11, title="stress at integration point 1", label="s11")
-    # plot!(t, s22, label="s22")
-    # plot!(t, s33, label="s33")
-    # plot!(t, s12, label="s12")
-    # plot!(t, s23, label="s23")
-    # plot!(t, s31, label="s31")
-end
+plot(tim,u2_96)
+png("node_96_displacement_as_a_function_of_time")

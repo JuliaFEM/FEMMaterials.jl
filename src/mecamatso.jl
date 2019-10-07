@@ -7,7 +7,7 @@
 A simplified 3D continuum model for material tests.
 """
 mutable struct Continuum3D <: FieldProblem
-    material_model :: Symbol
+    material_model :: Union{Symbol, Expr}
 end
 
 Continuum3D() = Continuum3D(:nothing)
@@ -417,7 +417,7 @@ Create a standardized material test for one element. Returns a tuple:
     (analysis, problem, element, ip1)
 
 """
-function get_one_element_material_analysis(material_model::Symbol)
+function get_one_element_material_analysis(material_model::Union{Symbol, Expr})
 
     X = Dict(
         1 => [0.0, 0.0, 0.0],

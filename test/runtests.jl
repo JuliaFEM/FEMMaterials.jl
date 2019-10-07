@@ -10,6 +10,9 @@ using FEMBase, Materials, FEMMaterials, Test
     @testset "test mechanical material solver" begin
         include("test_mecamatso.jl")
     end
+    @testset "test material expression" begin
+        include("test_mecamatso_expr.jl")
+    end
     @testset "test ideal plastic material model with shear strain" begin
         include("test_idealplastic_shear.jl")
     end

@@ -40,11 +40,12 @@ function generate_docs(pkg)
     pkg_dir = dirname(dirname(pathof(pkg)))
     exampledir = joinpath(pkg_dir, "examples")
     outdir = joinpath(pkg_dir, "docs", "src", "examples")
+    outdir_notebooks = joinpath(pkg_dir, "docs", "src", "notebooks")
     example_pages = []
     for example_file in readdir(exampledir)
         startswith(example_file, "example_") || continue
         Literate.markdown(joinpath(exampledir, example_file), outdir; documenter=true, preprocess=preprocess)
-        Literate.notebook(joinpath(exampledir, example_file), joinpath(pkg_dir,"notebooks"); documenter=true, preprocess=preprocess, execute=true)
+        Literate.notebook(joinpath(exampledir, example_file), outdir_notebooks; documenter=true, preprocess=preprocess, execute=true)
         generated_example_file = joinpath("examples", first(splitext(example_file)) * ".md")
         push!(example_pages, generated_example_file)
     end
@@ -78,5 +79,3 @@ makedocs(modules=[FEMMaterials],
                   "Examples" => example_pages
                  ]
         )
-
-generate_readme(FEMMaterials)

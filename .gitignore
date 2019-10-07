@@ -2,7 +2,4 @@
 *.jl.*.cov
 *.jl.mem
 deps/deps.jl
-notebooks
 docs/build
-docs/src
-README.md

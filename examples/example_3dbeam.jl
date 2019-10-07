@@ -92,7 +92,6 @@ png("max_vonmises_stress_as_a_function_of_time")
 # ![max_vonmises_stress_as_a_function_of_time][vonmises]
 # [vonmises]: https://raw.githubusercontent.com/JuliaFEM/FEMMaterials.jl/master/notebooks/max_vonmises_stress_as_a_function_of_time.png
 
-
 # ## The second post-processing step is to collect displacements
 #
 # Here as an example node number 96 second degree of freedom displacement is

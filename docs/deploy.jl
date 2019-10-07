@@ -5,5 +5,7 @@ using Documenter
 using FEMMaterials
 
 deploydocs(
-    deps = Deps.pip("mkdocs", "python-markdown-math"),
-    repo = "github.com/JuliaFEM/FEMMaterials.jl.git")
+    repo = "github.com/JuliaFEM/FEMMaterials.jl.git",
+    target = "build",
+    deps = nothing,
+    make = nothing)

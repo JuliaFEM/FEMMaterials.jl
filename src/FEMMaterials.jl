@@ -4,7 +4,8 @@ using Materials, JuliaFEM, FEMBase, LinearAlgebra, SparseArrays, Tensors
 
 # Material simulator to solve global system and run standard one element tests
 include("mecamatso.jl")
-export get_one_element_material_analysis, AxialStrainLoading, ShearStrainLoading, update_bc_elements!
+export get_one_element_material_analysis, AxialStrainLoading, ShearStrainLoading
+export update_bc_elements!, Continuum3D, MecaMatSo
 
 # Material point simulator to study material behavior in single integration point
 include("simulator.jl")

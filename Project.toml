@@ -1,7 +1,7 @@
 name = "FEMMaterials"
 uuid = "0c6c1f6c-65b6-54d6-9cff-6b64003af638"
 authors = ["Jukka Aho <ahojukka5@gmail.com>", "Joona Vaara <joona_vaara@hotmail.com>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 FEMBase = "fbcbbc08-f1bf-5204-9233-b69f5d396135"

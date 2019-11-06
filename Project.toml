@@ -16,6 +16,10 @@ JuliaFEM = "f80590ac-b429-510a-8a99-e7c46989f22d"
 [compat]
 julia = "1.0.0" # [1.0.0,  2.0.0)
 Materials = "0.2.0" # [0.2.0,  1.0.0)
+FEMBase = "0.2.2"
+ForwardDiff = "0.10.3"
+JuliaFEM = "0.5.1"
+Tensors = "1.2.0"
 
 [extras]
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
